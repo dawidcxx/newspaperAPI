@@ -4,7 +4,7 @@ import "github.com/gin-gonic/gin"
 import "github.com/joho/godotenv"
 import "os"
 
-//SECRET used to token encrpytion
+//SECRET used for token encrpytion
 var SECRET = ""
 
 func main() {
