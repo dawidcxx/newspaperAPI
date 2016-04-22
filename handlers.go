@@ -103,106 +103,105 @@ type articleRequest struct {
 
 //PostAPIArticle POST /api/article
 func PostAPIArticle(c *gin.Context) {
-  var input articleRequest
-  
-  if err := c.BindJSON(&input); err != nil {
-    c.Status(http.StatusBadRequest)
-    return
-  }
-  
-  var newArticleID int
-	
+	var input articleRequest
+
+	if err := c.BindJSON(&input); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	var newArticleID int
+
 	currentUserID, _ := c.Get("UserID")
- 
-  err := DB.QueryRow(`
+
+	err := DB.QueryRow(`
     INSERT INTO articles (title, body, published_at, user_id)
     VALUES ($1, $2, $3, $4)
     RETURNING articles.id;
   `, input.Title, input.Body, input.PublishAt, currentUserID).Scan(&newArticleID)
-  
-  if err != nil {
-    c.Status(http.StatusConflict)
-    return
-  }
-  
-  c.JSON(http.StatusCreated, gin.H{"id": newArticleID})
-  
+
+	if err != nil {
+		c.Status(http.StatusConflict)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"id": newArticleID})
+
 }
 
 //GetAPIArticle GET /api/article/:id<int>
 func GetAPIArticle(c *gin.Context) {
-  input, err := strconv.Atoi(c.Param("id"))
-  
-  if err != nil {
-    c.Status(http.StatusBadRequest)
-    return
-  }
-  
-  var out Article
-  
-  if err := DB.QueryRowx("SELECT * FROM articles WHERE id=$1", input).StructScan(&out); err != nil {
-    c.Status(http.StatusNotFound)
-    return
-  }
-  
-  c.JSON(http.StatusOK, out)
-  
+	input, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	var out Article
+
+	if err := DB.QueryRowx("SELECT * FROM articles WHERE id=$1", input).StructScan(&out); err != nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
+	c.JSON(http.StatusOK, out)
+
 }
 
 //PutAPIArticle PUT /api/article/:id<int>
 func PutAPIArticle(c *gin.Context) {
-  id, err := strconv.Atoi(c.Param("id"))
-  
-  if err != nil {
-    c.Status(http.StatusBadRequest)
-    return
-  } 
-	
- 	var updatedArticle articleRequest
-  
-  if err := c.BindJSON(&updatedArticle); err != nil {
-    c.Status(http.StatusBadRequest)
-    return
-  }
-  
-  DB.Exec(`
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	var updatedArticle articleRequest
+
+	if err := c.BindJSON(&updatedArticle); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	DB.Exec(`
     UPDATE articles 
     SET title=$1, body=$2, published_at=$3
     WHERE id=$4
   `, updatedArticle.Title, updatedArticle.Body, updatedArticle.PublishAt, id)
-  
-  c.Status(http.StatusNoContent)
-  
+
+	c.Status(http.StatusNoContent)
+
 }
 
 //DeleteAPIArticle DELETE /api/article/:id<int>
 func DeleteAPIArticle(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
-	
+
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	
+
 	var articleOwnerID int
-	
+
 	if err := DB.QueryRowx("SELECT user_id FROM articles WHERE id=$1", id).Scan(&articleOwnerID); err != nil {
 		c.Status(http.StatusNotFound)
 		return
 	}
-	
+
 	currentUserID, _ := c.Get("UserID")
-	
+
 	if articleOwnerID != currentUserID {
 		c.Status(http.StatusUnauthorized)
 		return
 	}
-	
-	DB.Exec("DELETE FROM articles where id=$1", id)
-	
-	c.Status(http.StatusNoContent)
-	
-}
 
+	DB.Exec("DELETE FROM articles where id=$1", id)
+
+	c.Status(http.StatusNoContent)
+
+}
 
 //</ARTICLE>
