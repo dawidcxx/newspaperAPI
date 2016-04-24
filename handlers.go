@@ -125,7 +125,7 @@ func PostAPIArticle(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": newArticleID})
+	c.JSON(http.StatusCreated, standardCreatedResponse{ID: newArticleID})
 
 }
 
@@ -234,7 +234,7 @@ func PostAPIComment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": newComemntID})
+	c.JSON(http.StatusCreated, standardCreatedResponse{ID: newComemntID})
 
 }
 
