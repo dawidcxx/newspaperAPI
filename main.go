@@ -33,6 +33,11 @@ func main() {
       article.PUT("/:id", PutAPIArticle)
       article.DELETE("/:id", Auth, DeleteAPIArticle)
     }
+    comment := api.Group("/comment")
+    {
+      comment.POST("/", Auth, PostAPIComment)
+      comment.GET("/:id", GetAPIComment)
+    }
   }
   
   app.Run()

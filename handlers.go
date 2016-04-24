@@ -6,6 +6,7 @@ import "github.com/gin-gonic/gin"
 import jwt "github.com/dgrijalva/jwt-go"
 import "strconv"
 import "golang.org/x/crypto/bcrypt"
+import "fmt"
 
 type standardCreatedResponse struct {
 	ID int `json:"id"`
@@ -93,7 +94,6 @@ func PostAuthLogin(c *gin.Context) {
 }
 
 //</AUTH>
-
 //<ARTICLE>
 type articleRequest struct {
 	Title     string    `json:"title" binding:"required"`
@@ -205,3 +205,58 @@ func DeleteAPIArticle(c *gin.Context) {
 }
 
 //</ARTICLE>
+//<COMMENTS>
+type commentRequest struct {
+	Body string `json:"body" binding:"required"`
+}
+
+//PostAPIComment POST /api/comment
+func PostAPIComment(c *gin.Context) {
+	var input commentRequest
+
+	if err := c.BindJSON(&input); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	var newComemntID int
+
+	currentUserID, _ := c.Get("UserID")
+
+	err := DB.QueryRow(`
+		INSERT INTO comments (body, user_id)
+		VALUES ($1, $2)
+		RETURNING comments.id
+	`, input.Body, currentUserID).Scan(&newComemntID)
+
+	if err != nil {
+		c.Status(http.StatusConflict)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"id": newComemntID})
+
+}
+
+//GetAPIComment GET /api/comment/:id<int>
+func GetAPIComment(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	var out Comment
+	
+	if err := DB.QueryRowx(`SELECT * FROM comments WHERE id=$1`, id).StructScan(&out); err != nil {
+		fmt.Print(err.Error())
+		c.Status(http.StatusNotFound)
+		return	
+	}
+	
+	c.JSON(http.StatusOK, out)
+	
+}
+
+//</COMMENTS>
