@@ -6,7 +6,6 @@ import "github.com/gin-gonic/gin"
 import jwt "github.com/dgrijalva/jwt-go"
 import "strconv"
 import "golang.org/x/crypto/bcrypt"
-import "fmt"
 
 type standardCreatedResponse struct {
 	ID int `json:"id"`
@@ -104,7 +103,7 @@ type articleRequest struct {
 //PostAPIArticle POST /api/article
 func PostAPIArticle(c *gin.Context) {
 	var input articleRequest
-
+	
 	if err := c.BindJSON(&input); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
@@ -144,7 +143,13 @@ func GetAPIArticle(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 		return
 	}
-
+	
+	if out.PublishAt.After(time.Now()) {
+		c.Status(http.StatusNotFound)
+		return
+	}
+		
+	
 	c.JSON(http.StatusOK, out)
 
 }
@@ -250,7 +255,6 @@ func GetAPIComment(c *gin.Context) {
 	var out Comment
 	
 	if err := DB.QueryRowx(`SELECT * FROM comments WHERE id=$1`, id).StructScan(&out); err != nil {
-		fmt.Print(err.Error())
 		c.Status(http.StatusNotFound)
 		return	
 	}
