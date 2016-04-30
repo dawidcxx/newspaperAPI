@@ -128,6 +128,31 @@ func PostAPIArticle(c *gin.Context) {
 
 }
 
+//GetAPIArticles GET /api/article/
+func GetAPIArticles(c *gin.Context) {
+	var offset int
+	var limit int
+	
+	offset, oerr := strconv.Atoi(c.Query("offset"))
+	
+	if oerr != nil {
+		offset = 0
+	}
+	
+	limit, lerr := strconv.Atoi(c.Query("limit"))
+		
+	if lerr != nil || limit > 25 {
+		limit = 25
+	}	 
+	
+		var articles []Article
+		
+		DB.Select(&articles, `SELECT * FROM articles offset $1 limit $2`, offset, limit)
+	
+	c.JSON(http.StatusOK, articles)
+	
+}
+
 //GetAPIArticle GET /api/article/:id<int>
 func GetAPIArticle(c *gin.Context) {
 	input, err := strconv.Atoi(c.Param("id"))

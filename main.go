@@ -28,6 +28,7 @@ func main() {
   {
     article := api.Group("/article")
     {
+      article.GET("/", GetAPIArticles)
       article.POST("/", Auth, PostAPIArticle)
       article.GET("/:id", GetAPIArticle)
       article.PUT("/:id", PutAPIArticle)
